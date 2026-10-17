@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>GLOBAL HEARTBEAT</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2304050a' stroke='%2300f0ff' stroke-width='2'/%3E%3Cellipse cx='16' cy='16' rx='6' ry='14' fill='none' stroke='%2300f0ff' stroke-width='1.5'/%3E%3Cpath d='M2 16h28M5 9h22M5 23h22' fill='none' stroke='%2300f0ff' stroke-width='1.5'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+        "astronomy-engine": "https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/esm/astronomy.min.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="loading"><span>&#10084;</span><p>HEARTBEAT</p><small>loading the world...</small></div>
+  <canvas id="globe"></canvas>
+  <header>
+    <h1>GLOBAL HEARTBEAT</h1>
+  </header>
+  <aside id="panel" hidden>
+    <h2 id="p-name"></h2>
+    <div id="p-time"></div>
+    <div id="p-wx"></div>
+    <div id="p-aq"></div>
+    <div id="p-bpm"></div>
+    <div id="p-air"></div>
+    <button id="enter">ENTER CITY</button>
+  </aside>
+  <div id="tools"><button id="labels">labels: on</button><button id="mute">sound: on</button></div>
+  <div id="key"><i style="background:#ff2e93"></i>cities <i style="background:#ffb020"></i>earthquakes, last 24h <i style="background:#3dff9a"></i>aurora</div>
+  <canvas id="cityview" hidden></canvas>
+  <div id="tip" hidden></div>
+  <div id="cityinfo" hidden><button class="back">&larr; Globe</button><b></b><button id="radar-toggle">Rain radar: on</button></div>
+  <div id="legend" hidden>
+    <div data-bike><i style="background:#00f0ff"></i>Bikes available</div>
+    <div data-bike><i style="background:#ff2e93"></i>Empty station</div>
+    <div data-radar><i style="background:linear-gradient(90deg,#4ab,#3c3,#ee3,#f33)"></i>Rain radar</div>
+    <div><i class="plane" style="background:#ff2e93"></i>Aircraft</div>
+    <div><i class="plane" style="background:#5a6"></i>Aircraft on ground</div>
+  </div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
