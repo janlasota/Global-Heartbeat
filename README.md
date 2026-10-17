@@ -13,17 +13,18 @@ node server.mjs
 ```
 
 Then open http://localhost:3000. Needs Node 18 or newer. The small server does two jobs the browser can't:
-it proxies live aircraft (adsb.lol) and bike-share feeds that block cross-origin requests, and it caches both.
+it proxies live aircraft (adsb.lol), bike-share feeds and satellite orbit data, which browsers can't fetch directly, and caches them.
 
 ## Deploy
 
-The same two routes exist as Vercel functions in `api/`, wired up by `vercel.json`. Import the repo on Vercel,
+The same routes exist as Vercel functions in `api/`, wired up by `vercel.json`. Import the repo on Vercel,
 leave all settings alone and deploy. Responses are cached at the CDN, so many visitors share one upstream call.
 
 ## Files
 
 - `main.js` the globe: cities, day/night, aurora, quakes, ISS, panel, sound
 - `sky.js` stars, constellations, Sun, Moon, planets, pulsars (loaded separately so the globe works without it)
+- `sats.js` satellites, `ship.js` the starfighter toy, `tonight.js` the "Tonight in..." sky card
 - `city.js` the zoomed city view: map tiles, bikes, aircraft, radar
 - `feeds.js` server-side fetching shared by `server.mjs` and `api/*`
 - `bikes.js` the bike-share feed per city, `cities.js` the city list, `weather.js` weather and air quality, `sound.js` the heartbeat
@@ -35,6 +36,7 @@ leave all settings alone and deploy. Responses are cached at the CDN, so many vi
 - Weather and air quality: [Open-Meteo](https://open-meteo.com) (CC BY 4.0, non-commercial use)
 - Earthquakes: USGS. Aurora: NOAA Space Weather Prediction Center. ISS position: wheretheiss.at
 - Rain radar: [RainViewer](https://www.rainviewer.com). Map tiles: Esri. Land outlines and stars: Natural Earth and d3-celestial
+- Satellite orbits: [CelesTrak](https://celestrak.org), propagated in the browser with [satellite.js](https://github.com/shashwatak/satellite-js). A snapshot lives in `data/` as a fallback
 - Planet, Sun and Moon positions: [astronomy-engine](https://github.com/cosinekitty/astronomy)
 - 3D: [three.js](https://threejs.org)
 

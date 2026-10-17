@@ -37,7 +37,6 @@ const glow = (color) => {
 
 // Sun/Moon/planet names are the same size on screen at any distance or zoom (sizeAttenuation off).
 const LABEL = [0.1756, 0.0439];
-const bodyLabels = []; // { sprite, div } so update() can resize them with zoom
 const labelSprite = (text) => {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 64;
@@ -61,6 +60,7 @@ function starColor(bv) {
 const PHASES = ['New Moon', 'Waxing crescent', 'First quarter', 'Waxing gibbous', 'Full Moon', 'Waning gibbous', 'Last quarter', 'Waning crescent'];
 
 export function initSky(scene, camera, toVec3, sunDirection) {
+  const amp = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.2 : 1; // calmer pulsars on request
   const group = new THREE.Group(); // turns with Earth's sidereal rotation so stars drift across the sky correctly
   scene.add(group);
   const pickable = []; // { obj, radius(px), html(), prio? }  (lower prio wins)
@@ -170,7 +170,6 @@ export function initSky(scene, camera, toVec3, sunDirection) {
   const moon = new THREE.Mesh(new THREE.SphereGeometry(0.7, 32, 32), new THREE.MeshLambertMaterial({ color: 0xc4c9d2 }));
   const moonLabel = labelSprite('Moon');
   moonLabel.scale.set(LABEL[0], LABEL[1], 1);
-  bodyLabels.push({ sprite: moonLabel, div: 1 });
   moonLabel.position.set(0, 0.75, 0); // just above the Moon's disc
   moon.add(moonLabel);
   group.add(moon);
@@ -185,7 +184,6 @@ export function initSky(scene, camera, toVec3, sunDirection) {
     sprite.scale.setScalar(1.6);
     const label = labelSprite(name);
     label.scale.set(LABEL[0] / 1.6, LABEL[1] / 1.6, 1); // parent sprite is scaled 1.6
-    bodyLabels.push({ sprite: label, div: 1.6 });
     sprite.add(label);
     group.add(sprite);
     const p = { name, sprite, info: '' };
@@ -198,7 +196,6 @@ export function initSky(scene, camera, toVec3, sunDirection) {
   sun.scale.setScalar(7);
   const sunLabel = labelSprite('Sun');
   sunLabel.scale.set(LABEL[0] / 7, LABEL[1] / 7, 1); // parent sprite is scaled 7
-  bodyLabels.push({ sprite: sunLabel, div: 7 });
   sunLabel.position.set(0, 0.17, 0); // just clears the Sun's bright core, same small gap as the planets
   sun.add(sunLabel);
   group.add(sun);
@@ -230,9 +227,6 @@ export function initSky(scene, camera, toVec3, sunDirection) {
   const tmp = new THREE.Vector3(), cam = new THREE.Vector3();
   return {
     update(date) {
-      // zoomed in (about 3.2 away) labels are full size, fully zoomed out (12) they are 60% size
-      const f = 1 - 0.4 * Math.min(1, Math.max(0, (camera.position.length() - 3.2) / 8.8));
-      for (const { sprite, div } of bodyLabels) sprite.scale.set((LABEL[0] * f) / div, (LABEL[1] * f) / div, 1);
       group.rotation.y = -((Astronomy.SiderealTime(date) * 15 * Math.PI) / 180);
       sunLight.position.copy(sunDirection(date)).multiplyScalar(10);
       if (Date.now() - last > 60000) { // Moon/planets move slowly, once a minute is plenty
@@ -251,8 +245,8 @@ export function initSky(scene, camera, toVec3, sunDirection) {
       const t = performance.now() / 1000;
       for (const p of pulsars) {
         const phase = (t / p.shown + p.offset) % 1;
-        p.sprite.scale.setScalar(1.3 + 1.6 * Math.exp(-((phase / 0.18) ** 2)));
-        p.sprite.material.opacity = 0.55 + 0.45 * Math.exp(-((phase / 0.18) ** 2));
+        p.sprite.scale.setScalar(1.3 + 1.6 * amp * Math.exp(-((phase / 0.18) ** 2)));
+        p.sprite.material.opacity = 0.55 + 0.45 * amp * Math.exp(-((phase / 0.18) ** 2));
       }
     },
     setLabels(on) { for (const l of labels) l.visible = on; },

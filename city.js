@@ -9,6 +9,7 @@ const legend = document.getElementById('legend');
 const tiles = new Map();
 const tip = document.getElementById('tip');
 const loading = document.getElementById('loading');
+const tonightCard = document.getElementById('tonight');
 
 // slippy-map math: lon/lat <-> world pixels at zoom z
 const wx = (lon, z) => ((lon + 180) / 360) * T * 2 ** z;
@@ -214,10 +215,13 @@ export function openCity(c, onClose) {
     else loading.classList.add('done');
   });
   loadRadar();
+  // sky card for this city (computed locally, so no loading state needed)
+  import('./tonight.js').then((m) => { tonightCard.innerHTML = m.tonight(c); tonightCard.hidden = false; }).catch((e) => console.warn('tonight', e));
   timers = [setInterval(() => loadBikes(c.name), 60000), setInterval(() => loadPlanes(c), 10000), setInterval(loadRadar, 300000)];
   raf = requestAnimationFrame(draw);
   info.querySelector('button').onclick = () => {
     tip.hidden = true;
+    tonightCard.hidden = true;
     clearTimeout(hang);
     loading.classList.add('done');
     cancelAnimationFrame(raf);

@@ -2,7 +2,7 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
-import { planes, bikeFeed } from './feeds.js';
+import { planes, bikeFeed, tle } from './feeds.js';
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 
@@ -14,6 +14,14 @@ http.createServer(async (req, res) => {
       const body = await bikeFeed(u.searchParams.get('city'), +u.searchParams.get('k'));
       if (body == null) return json(404, {});
       res.writeHead(200, { 'content-type': 'application/json' });
+      return res.end(body);
+    } catch { return json(502, {}); }
+  }
+  if (path === '/tle') {
+    try {
+      const body = await tle(u.searchParams.get('group'));
+      if (body == null) return json(404, {});
+      res.writeHead(200, { 'content-type': 'text/plain' });
       return res.end(body);
     } catch { return json(502, {}); }
   }

@@ -22,6 +22,9 @@ controls.minDistance = 1.6;
 controls.maxDistance = 12;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.4;
+// people who asked their OS for less motion get no idle spin and much calmer pulses
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (calm) controls.autoRotate = false;
 
 // lat/lon (deg) -> unit vector. Sun uses same fn, so day/night lines up.
 function toVec3(lat, lon, r = R) {
@@ -349,12 +352,14 @@ function showQuake(q, e) {
 canvas.addEventListener('pointermove', (e) => {
   if (downAt) { hoverQ = null; return void (tip.hidden = true); }
   const city = pickCity(e);
-  const onIss = !city && pickISS(e);
+  const onShip = !city && ship?.pick(e.clientX, e.clientY);
+  const onIss = !city && !onShip && pickISS(e);
   const q = city || onIss ? null : pickQuake(e);
-  const skyHtml = !city && !onIss && !q ? sky?.pick(e.clientX, e.clientY) : null;
-  canvas.style.cursor = city ? 'pointer' : onIss || q || skyHtml ? 'help' : 'grab';
+  const skyHtml = !city && !onIss && !q ? (sky?.pick(e.clientX, e.clientY) ?? sats?.pick(e.clientX, e.clientY)) : null;
+  canvas.style.cursor = city || onShip ? 'pointer' : onIss || q || skyHtml ? 'help' : 'grab';
   hoverQ = q;
-  if (skyHtml) showSky(skyHtml, e);
+  if (onShip) showSky('<b>Do a barrel roll!</b><br>click me', e);
+  else if (skyHtml) showSky(skyHtml, e);
   else if (onIss) showISS(e);
   else showQuake(q, e);
 });
@@ -363,6 +368,37 @@ canvas.addEventListener('pointerdown', (e) => {
   downAt = { x: e.clientX, y: e.clientY };
   poke();
 });
+function selectCity(c) {
+  selected = c;
+  loadAir(c);
+  loadWeather(c);
+  loadAqi(c);
+  panel.hidden = false;
+  renderPanel(simNow());
+  placePanel();
+}
+// turn the globe so a city faces the camera
+function faceCity(c) {
+  camera.position.copy(c.dot.position).normalize().multiplyScalar(camera.position.length());
+  controls.update();
+}
+const jump = document.getElementById('jump');
+for (const c of [...cities].sort((a, b) => a.name.localeCompare(b.name))) jump.add(new Option(c.name, c.name));
+jump.onchange = () => {
+  const c = cities.find((x) => x.name === jump.value);
+  jump.value = '';
+  if (!c || inCity) return;
+  poke();
+  tip.hidden = true;
+  faceCity(c);
+  selectCity(c);
+};
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (inCity) document.querySelector('#cityinfo .back').click();
+  else { selected = null; panel.hidden = true; tip.hidden = true; }
+});
+
 canvas.addEventListener('pointerup', (e) => {
   if (!downAt) return;
   const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
@@ -370,18 +406,13 @@ canvas.addEventListener('pointerup', (e) => {
   if (moved > 6) return;
   const hit = pickCity(e);
   if (hit) {
-    selected = hit;
-    loadAir(hit);
-    loadWeather(hit);
-    loadAqi(hit);
-    panel.hidden = false;
-    renderPanel(simNow());
-    placePanel();
+    selectCity(hit);
   } else {
     selected = null;
     panel.hidden = true;
-    const skyHtml = sky?.pick(e.clientX, e.clientY);
-    if (pickISS(e)) showISS(e);
+    const skyHtml = (sky?.pick(e.clientX, e.clientY) ?? sats?.pick(e.clientX, e.clientY));
+    if (ship?.pick(e.clientX, e.clientY)) ship.roll();
+    else if (pickISS(e)) showISS(e);
     else if (pickQuake(e)) showQuake(pickQuake(e), e);
     else if (skyHtml) showSky(skyHtml, e);
     else tip.hidden = true;
@@ -513,6 +544,36 @@ setInterval(loadISS, 5000);
 let sky = null;
 import('./sky.js').then((s) => { sky = s.initSky(scene, camera, toVec3, sunDirection); }).catch((e) => console.warn('sky', e));
 
+// satellites (see sats.js): off by default, and nothing is downloaded until the first time they're switched on
+let sats = null;
+const satsBtn = document.getElementById('sats');
+let satsOn = false;
+satsBtn.onclick = async () => {
+  satsOn = !satsOn;
+  satsBtn.textContent = `satellites: ${satsOn ? 'on' : 'off'}`;
+  if (satsOn && !sats) {
+    satsBtn.textContent = 'satellites: loading...';
+    try {
+      sats = await (await import('./sats.js')).initSats(scene, toVec3, camera);
+    } catch (e) { console.warn('sats', e); }
+    satsBtn.textContent = `satellites: ${satsOn ? (sats ? 'on' : 'unavailable') : 'off'}`;
+  }
+  sats?.set(satsOn);
+};
+
+// the starfighter toy (see ship.js), loaded on demand the first time it's switched on
+let ship = null;
+const shipBtn = document.getElementById('ship');
+let shipOn = false;
+shipBtn.onclick = async () => {
+  shipOn = !shipOn;
+  shipBtn.textContent = `starfighter: ${shipOn ? 'on' : 'off'}`;
+  try {
+    ship ??= (await import('./ship.js')).initShip(scene, camera, toVec3);
+    ship.set(shipOn);
+  } catch (e) { console.warn('ship', e); }
+};
+
 // main loop
 const clock = new THREE.Clock();
 let lastPanel = 0;
@@ -538,21 +599,23 @@ function frame() {
     }
     // lub-dub: main beat at 0, softer second at 0.18
     const beat = Math.exp(-(((p - 0.0) / 0.07) ** 2)) + 0.6 * Math.exp(-(((p - 0.18) / 0.07) ** 2));
-    c.dot.scale.setScalar(HEART * (1 + beat * 0.9));
+    c.dot.scale.setScalar(HEART * (1 + beat * (calm ? 0.2 : 0.9)));
     const ringScale = 0.02 + p * 0.09;
     c.ring.scale.setScalar(ringScale);
-    c.ring.material.opacity = Math.max(0, (1 - p) ** 2) * 0.7 * (c.bpm / 90);
+    c.ring.material.opacity = Math.max(0, (1 - p) ** 2) * 0.7 * (c.bpm / 90) * (calm ? 0.3 : 1);
     // faster hearts run hotter pink
     c.dot.material.color.setHSL(0.5 - (c.bpm - 42) / 120 * 0.2, 1, 0.55);
   }
 
   sky?.update(now);
+  sats?.update(now);
+  ship?.update(dt);
   iss.position.lerp(issTarget, 0.05);
   const qt = performance.now() / 3000;
   for (const q of quakes) {
-    const p = (qt + q.off) % 1;
+    const p = calm ? 0.5 : (qt + q.off) % 1; // calm: still rings instead of pulsing ones
     q.ring.scale.setScalar(0.01 + p * 0.012 * q.mag);
-    q.ring.material.opacity = (1 - p) ** 1.5 * 0.8;
+    q.ring.material.opacity = calm ? 0.35 : (1 - p) ** 1.5 * 0.8;
     q.dot.scale.setScalar(q.base * (q === hoverQ ? 1.8 : 1));
   }
 
@@ -562,7 +625,7 @@ function frame() {
   }
 
   if (selected || inCity) idleSince = performance.now(); // never spin out from under an open menu
-  else if (!controls.autoRotate && performance.now() - idleSince > IDLE_MS) { controls.autoRotate = true; tip.hidden = true; }
+  else if (!calm && !controls.autoRotate && performance.now() - idleSince > IDLE_MS) { controls.autoRotate = true; tip.hidden = true; }
   controls.update();
   renderer.render(scene, camera);
   placePanel();

@@ -69,3 +69,17 @@ button { font: inherit; font-size: 11px; color: var(--neon); background: none; b
 #tools button { background: rgba(4, 5, 10, 0.75); padding: 8px 12px; border-radius: 12px; }
 #tools #mute { position: static; }
 #tip .fact { margin-top: 1.4em; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#jump { pointer-events: auto; margin-top: 8px; font: inherit; font-size: 11px; color: var(--text); background: rgba(4, 5, 10, 0.75);
+  border: 1px solid var(--neon); border-radius: 12px; padding: 6px 10px; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  #loading span { animation: none; }
+  #loading { transition: none; }
+  .dots::after { animation: none; content: '...'; }
+}
+#tonight { position: fixed; z-index: 11; left: 16px; bottom: 36px; max-width: 290px; font-size: 11px; line-height: 1.5; color: var(--text);
+  background: rgba(4, 5, 10, 0.75); padding: 10px 12px; border: 1px solid var(--neon); border-radius: 12px; }
+#tonight b { display: block; color: var(--neon); font-size: 12px; margin-bottom: 4px; }
+#tonight div + div { margin-top: 2px; }
+#tonight[hidden] { display: none; }

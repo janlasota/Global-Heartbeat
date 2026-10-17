@@ -1,9 +1,11 @@
 // Shared by server.mjs (local) and api/* (Vercel): fetches that browsers can't do themselves (no CORS) or shouldn't repeat.
+import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import { BIKES } from './bikes.js';
 
 const H = { headers: { 'User-Agent': 'heartbeat-globe/0.1 (personal hobby project)' } };
 const air = new Map(); // aircraft cache, 10s
 const gbfs = new Map(); // bike feed cache, 30s
+const tles = new Map(); // orbit data cache, 2h
 
 export async function planes(lat, lon) {
   if (!(Math.abs(lat) <= 90 && Math.abs(lon) <= 180)) return { status: 400, data: [] };
@@ -41,4 +43,41 @@ export async function bikeFeed(city, k) {
     gbfs.set(url, { t: Date.now(), body });
   }
   return url.includes('tfl.gov.uk') ? fromTfl(body, k) : body;
+}
+
+// Satellite orbit data (TLE text) from CelesTrak. The value is "keep every Nth satellite" so the big Starlink list stays light.
+// CelesTrak updates every 2 hours and answers repeat downloads with a 403, so the order is:
+// memory cache -> disk cache (survives local restarts) -> live fetch -> any older copy -> snapshot bundled in data/.
+const TLE_GROUPS = { stations: 1, visual: 1, starlink: 4 };
+const TLE_MS = 7200000;
+const read = (url) => readFile(url, 'utf8').catch(() => null);
+
+export async function tle(group) {
+  if (!Object.hasOwn(TLE_GROUPS, group)) return null;
+  const mem = tles.get(group);
+  if (mem && Date.now() - mem.t < TLE_MS) return mem.body;
+
+  const cacheFile = new URL(`./.cache/tle-${group}.txt`, import.meta.url);
+  const age = await stat(cacheFile).then((st) => Date.now() - st.mtimeMs, () => Infinity);
+  if (age < TLE_MS) {
+    const body = await read(cacheFile);
+    if (body) { tles.set(group, { t: Date.now() - age, body }); return body; }
+  }
+
+  try {
+    const r = await fetch(`https://celestrak.org/NORAD/elements/gp.php?GROUP=${group}&FORMAT=tle`, H);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const lines = (await r.text()).split(/\r?\n/).filter(Boolean), out = [];
+    for (let i = 0; i + 2 < lines.length; i += 3) if ((i / 3) % TLE_GROUPS[group] === 0) out.push(lines[i], lines[i + 1], lines[i + 2]);
+    const body = out.join('\n');
+    tles.set(group, { t: Date.now(), body });
+    mkdir(new URL('./.cache/', import.meta.url), { recursive: true })
+      .then(() => writeFile(cacheFile, body))
+      .catch(() => {}); // read-only hosting is fine, it just won't keep a disk copy
+    return body;
+  } catch (e) {
+    const old = mem?.body ?? (await read(cacheFile)) ?? (await read(new URL(`./data/tle-${group}.txt`, import.meta.url)));
+    if (old) return old; // slightly old orbits still look right for a swarm
+    throw e;
+  }
 }

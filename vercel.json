@@ -1,6 +1,8 @@
 {
+  "functions": { "api/tle.js": { "includeFiles": "data/**" } },
   "rewrites": [
     { "source": "/air.json", "destination": "/api/air" },
-    { "source": "/gbfs", "destination": "/api/gbfs" }
+    { "source": "/gbfs", "destination": "/api/gbfs" },
+    { "source": "/tle", "destination": "/api/tle" }
   ]
 }
