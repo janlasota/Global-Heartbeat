@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CITIES } from './cities.js';
 import { openCity } from './city.js';
 import { loadWeather, wxText, loadAqi, aqiText } from './weather.js';
-import { unlock, lub, dub, toggleMute } from './sound.js';
+import { unlock, lub, dub, toggleMute, laser, boom, whoosh, engineOn } from './sound.js';
 
 const R = 1;
 const canvas = document.getElementById('globe');
@@ -565,11 +565,20 @@ satsBtn.onclick = async () => {
 let ship = null;
 const shipBtn = document.getElementById('ship');
 let shipOn = false;
+// stereo position for a sound: where the thing is on screen, left to right
+const panOf = (p) => Math.max(-1, Math.min(1, p.clone().project(camera).x)) * 0.8;
+const sfx = {
+  fire: (p) => !inCity && laser(panOf(p)),
+  boom: (p) => !inCity && boom(panOf(p)),
+  roll: (p) => !inCity && whoosh(panOf(p)),
+};
+let engineState = false;
 shipBtn.onclick = async () => {
+  unlock(); // browsers only start audio after a click, and this is one
   shipOn = !shipOn;
-  shipBtn.textContent = `starfighter: ${shipOn ? 'on' : 'off'}`;
+  shipBtn.textContent = `starfighters: ${shipOn ? 'on' : 'off'}`;
   try {
-    ship ??= (await import('./ship.js')).initShip(scene, camera, toVec3);
+    ship ??= (await import('./ship.js')).initShip(scene, camera, toVec3, sfx);
     ship.set(shipOn);
   } catch (e) { console.warn('ship', e); }
 };
@@ -608,6 +617,8 @@ function frame() {
   }
 
   sky?.update(now);
+  const wantEngine = shipOn && !inCity; // hum only while the fighters are on screen
+  if (wantEngine !== engineState) { engineState = wantEngine; engineOn(wantEngine); }
   sats?.update(now);
   ship?.update(dt);
   iss.position.lerp(issTarget, 0.05);

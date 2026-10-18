@@ -23,7 +23,7 @@
   <header>
     <h1>GLOBAL HEARTBEAT</h1>
     <label class="sr-only" for="jump">Jump to a city</label>
-    <select id="jump"><option value="">Jump to a city</option></select>
+    <select id="jump"><option value="" selected disabled hidden>Jump to a city</option></select>
   </header>
   <aside id="panel" hidden role="region" aria-label="City details" aria-live="polite">
     <h2 id="p-name"></h2>
@@ -34,7 +34,7 @@
     <div id="p-air"></div>
     <button id="enter">ENTER CITY</button>
   </aside>
-  <div id="tools"><button id="sats">satellites: off</button><button id="ship">starfighter: off</button><button id="labels">labels: on</button><button id="mute">sound: on</button></div>
+  <div id="tools"><button id="sats">satellites: off</button><button id="ship">starfighters: off</button><button id="labels">labels: on</button><button id="mute">sound: on</button></div>
   <div id="key"><i style="background:#ff2e93"></i>cities <i style="background:#ffb020"></i>earthquakes, last 24h <i style="background:#ff7ac8"></i>satellites <i style="background:#3dff9a"></i>aurora</div>
   <canvas id="cityview" hidden></canvas>
   <div id="tip" hidden></div>

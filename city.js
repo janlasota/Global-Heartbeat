@@ -216,7 +216,27 @@ export function openCity(c, onClose) {
   });
   loadRadar();
   // sky card for this city (computed locally, so no loading state needed)
-  import('./tonight.js').then((m) => { tonightCard.innerHTML = m.tonight(c); tonightCard.hidden = false; }).catch((e) => console.warn('tonight', e));
+  import('./tonight.js').then((m) => {
+    const { card, details } = m.tonight(c);
+    tonightCard.innerHTML = card;
+    tonightCard.hidden = false;
+    // hovering (or tapping) "More sky details" opens the full details
+    const moon = tonightCard.querySelector('.more');
+    const show = () => {
+      tip.innerHTML = details;
+      tip.style.maxWidth = '300px';
+      tip.hidden = false;
+      const r = moon.getBoundingClientRect();
+      tip.style.left = Math.min(r.right + 12, innerWidth - tip.offsetWidth - 12) + 'px';
+      tip.style.top = Math.max(12, Math.min(r.top, innerHeight - tip.offsetHeight - 16)) + 'px';
+    };
+    const hide = () => { tip.hidden = true; tip.style.maxWidth = ''; };
+    moon.onmouseenter = show;
+    moon.onmouseleave = hide;
+    moon.onclick = () => (tip.hidden ? show() : hide()); // touch has no hover
+    moon.onfocus = show; // keyboard: tab to the link
+    moon.onblur = hide;
+  }).catch((e) => console.warn('tonight', e));
   timers = [setInterval(() => loadBikes(c.name), 60000), setInterval(() => loadPlanes(c), 10000), setInterval(loadRadar, 300000)];
   raf = requestAnimationFrame(draw);
   info.querySelector('button').onclick = () => {
