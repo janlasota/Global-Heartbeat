@@ -2,7 +2,7 @@
 import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import { BIKES } from './bikes.js';
 
-const H = { headers: { 'User-Agent': 'heartbeat-globe/0.1 (personal hobby project)' } };
+const H = { headers: { 'User-Agent': 'global-heartbeat/0.1 (+https://github.com/janlasota/Global-Heartbeat)' } };
 const air = new Map(); // aircraft cache, 10s
 const gbfs = new Map(); // bike feed cache, 30s
 const tles = new Map(); // orbit data cache, 2h
