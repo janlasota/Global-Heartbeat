@@ -2,6 +2,8 @@
 
 **Live demo: https://global-heartbeat.vercel.app**
 
+![Global Heartbeat: a globe of pulsing city hearts under a real night sky](docs/screenshot.png)
+
 A fun interactive globe. Cities pulse at a heart rate driven by how busy their skies are, with live layers for
 earthquakes, the aurora, the ISS and the night sky. Tap a city to open its weather, air quality, bike-share stations,
 live aircraft and rain radar.
