@@ -381,6 +381,8 @@ function selectCity(c) {
 function faceCity(c) {
   camera.position.copy(c.dot.position).normalize().multiplyScalar(camera.position.length());
   controls.update();
+  camera.updateMatrixWorld(); // so the menu is placed with the new view, not last frame's
+  c.dot.visible = true; // it faces us now, and placePanel closes the menu for a heart it thinks is hidden
 }
 const jump = document.getElementById('jump');
 for (const c of [...cities].sort((a, b) => a.name.localeCompare(b.name))) jump.add(new Option(c.name, c.name));
@@ -545,6 +547,7 @@ let sky = null;
 import('./sky.js').then((s) => { sky = s.initSky(scene, camera, toVec3, sunDirection); }).catch((e) => console.warn('sky', e));
 
 // phones: the four toggles live behind a Menu button (on wide screens CSS shows them all in a row)
+document.addEventListener('gesturestart', (e) => e.preventDefault()); // iOS Safari ignores the viewport setting, this stops its page pinch-zoom
 const toolsEl = document.getElementById('tools');
 const menuBtn = document.getElementById('menu');
 menuBtn.onclick = () => {

@@ -124,3 +124,6 @@ button { font: inherit; font-size: 11px; color: var(--neon); background: none; b
 @media (max-width: 700px) {
   #cityinfo b { margin-inline: auto; text-align: center; justify-content: center; }
 }
+
+/* the page itself never pinch-zooms (the globe and map keep their own zoom), so the buttons can't get zoomed out of reach */
+html, body { touch-action: pan-x pan-y; }
