@@ -119,3 +119,8 @@ button { font: inherit; font-size: 11px; color: var(--neon); background: none; b
   #cityinfo b { flex: 0 1 auto; max-width: 100%; }
   #tip.sheet { right: auto; width: fit-content; max-width: calc(100vw - 32px) !important; }
 }
+
+/* phones: center the city and weather box under the buttons */
+@media (max-width: 700px) {
+  #cityinfo b { margin-inline: auto; text-align: center; justify-content: center; }
+}
