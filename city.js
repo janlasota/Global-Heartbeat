@@ -11,14 +11,14 @@ const tip = document.getElementById('tip');
 const loading = document.getElementById('loading');
 const tonightCard = document.getElementById('tonight');
 const legendBtn = document.getElementById('legend-toggle');
-// phones: the legend is a panel you open under the header
+// phones: the legend and the radar switch live in a Layers panel you open under the header
 legendBtn.onclick = () => {
   const open = legend.classList.toggle('open');
-  legendBtn.textContent = open ? 'Hide legend' : 'Legend';
+  legendBtn.textContent = open ? 'Close' : 'Layers';
   legendBtn.setAttribute('aria-expanded', open);
   if (open) legend.style.top = info.getBoundingClientRect().bottom + 8 + 'px';
 };
-const closeLegend = () => { legend.classList.remove('open'); legend.style.top = ''; legendBtn.textContent = 'Legend'; };
+const closeLegend = () => { legend.classList.remove('open'); legend.style.top = ''; legendBtn.textContent = 'Layers'; };
 
 // slippy-map math: lon/lat <-> world pixels at zoom z
 const wx = (lon, z) => ((lon + 180) / 360) * T * 2 ** z;
@@ -46,12 +46,13 @@ function tile(z, x, y) {
 let radar = null;
 let radarOn = true;
 const radarRow = document.querySelector('#legend [data-radar]');
-const radarBtn = document.getElementById('radar-toggle');
-radarBtn.onclick = () => {
+const radarBtns = [document.getElementById('radar-toggle'), document.getElementById('radar-toggle-legend')]; // top bar on desktop, inside the Layers panel on phones
+const toggleRadar = () => {
   radarOn = !radarOn;
-  radarBtn.textContent = `Rain radar: ${radarOn ? 'on' : 'off'}`;
+  for (const b of radarBtns) b.textContent = `Rain radar: ${radarOn ? 'on' : 'off'}`;
   radarRow.hidden = !radarOn;
 };
+for (const b of radarBtns) b.onclick = toggleRadar;
 function radarTile(z, x, y) {
   const k = `r${radar.path}/${z}/${x}/${y}`;
   let t = tiles.get(k);
