@@ -119,10 +119,3 @@ button { font: inherit; font-size: 11px; color: var(--neon); background: none; b
   #cityinfo b { flex: 0 1 auto; max-width: 100%; }
   #tip.sheet { right: auto; width: fit-content; max-width: calc(100vw - 32px) !important; }
 }
-
-/* phones: one Layers button (legend + radar switch) instead of separate buttons */
-.legend-only { display: none; }
-@media (max-width: 700px) {
-  #cityinfo #radar-toggle { display: none; }
-  #legend .legend-only { display: block; width: 100%; margin-bottom: 8px; text-align: left; font-size: 11px; padding: 8px 10px; }
-}
