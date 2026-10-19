@@ -91,3 +91,24 @@ button { font: inherit; font-size: 11px; color: var(--neon); background: none; b
   text-decoration: underline; text-underline-offset: 3px; cursor: help; white-space: nowrap; }
 #tonight .more:hover, #tonight .more:focus-visible { opacity: 1; }
 #tonight { max-width: 330px; }
+
+/* ---- phones and narrow windows ---- */
+#menu, #legend-toggle { display: none; }
+#legend[hidden] { display: none !important; }
+@media (max-width: 700px) {
+  header h1 { letter-spacing: 0.25em; font-size: 13px; }
+  #tools { flex-direction: column; align-items: flex-end; }
+  #menu { display: block; }
+  #tools:not(.open) button:not(#menu) { display: none; }
+  #key { left: 16px; right: 16px; font-size: 9px; line-height: 1.9; }
+  #cityinfo { right: 16px; flex-wrap: wrap; gap: 8px; align-items: center; }
+  #cityinfo .back { order: 1; }
+  #cityinfo #radar-toggle { order: 2; }
+  #cityinfo #legend-toggle { order: 3; display: block; background: rgba(4, 5, 10, 0.75); border: 1px solid var(--neon); border-radius: 12px; }
+  #cityinfo b { order: 4; position: static; transform: none; flex: 1 1 100%; font-size: 12px; padding: 8px 12px; }
+  #cityinfo .back, #cityinfo #radar-toggle, #cityinfo #legend-toggle { font-size: 11px; padding: 8px 10px; }
+  #legend { display: none; left: auto; right: 16px; top: 120px; }
+  #legend.open { display: block; }
+  #tonight { max-width: calc(100vw - 32px); }
+  #tip.sheet { left: 16px !important; right: 16px; top: auto !important; max-width: none !important; max-height: 50vh; overflow: auto; }
+}

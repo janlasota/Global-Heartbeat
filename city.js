@@ -10,6 +10,15 @@ const tiles = new Map();
 const tip = document.getElementById('tip');
 const loading = document.getElementById('loading');
 const tonightCard = document.getElementById('tonight');
+const legendBtn = document.getElementById('legend-toggle');
+// phones: the legend is a panel you open under the header
+legendBtn.onclick = () => {
+  const open = legend.classList.toggle('open');
+  legendBtn.textContent = open ? 'Hide legend' : 'Legend';
+  legendBtn.setAttribute('aria-expanded', open);
+  if (open) legend.style.top = info.getBoundingClientRect().bottom + 8 + 'px';
+};
+const closeLegend = () => { legend.classList.remove('open'); legend.style.top = ''; legendBtn.textContent = 'Legend'; };
 
 // slippy-map math: lon/lat <-> world pixels at zoom z
 const wx = (lon, z) => ((lon + 180) / 360) * T * 2 ** z;
@@ -152,6 +161,8 @@ const pan = (dx, dy) => {
 };
 cv.onpointerdown = (e) => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, e); pinch = 0; };
 function hover(e) {
+  tip.classList.remove('sheet'); // the phone-sized sky details panel must not leak into plane and bike tooltips
+  tip.style.bottom = '';
   // planes win over bike stations; 12px pick radius
   let best = null, bd = 144;
   for (const [list, kind] of [[stations, 'bike'], [planes, 'plane']])
@@ -200,6 +211,7 @@ export function openCity(c, onClose) {
   W = cv.width = innerWidth; H = cv.height = innerHeight;
   cv.hidden = false;
   info.hidden = legend.hidden = false;
+  closeLegend();
   const title = info.querySelector('b');
   title.textContent = c.name;
   loadWeather(c).then(() => { if (c.wx) title.textContent = `${c.name} \u00b7 ${wxText(c)}`; });
@@ -224,23 +236,32 @@ export function openCity(c, onClose) {
     const moon = tonightCard.querySelector('.more');
     const show = () => {
       tip.innerHTML = details;
-      tip.style.maxWidth = '300px';
       tip.hidden = false;
+      if (innerWidth <= 700) { // phones: a panel just above the card instead of a floating tooltip
+        tip.classList.add('sheet');
+        tip.style.bottom = innerHeight - tonightCard.getBoundingClientRect().top + 8 + 'px';
+        return;
+      }
+      tip.style.maxWidth = '300px';
       const r = moon.getBoundingClientRect();
       tip.style.left = Math.min(r.right + 12, innerWidth - tip.offsetWidth - 12) + 'px';
       tip.style.top = Math.max(12, Math.min(r.top, innerHeight - tip.offsetHeight - 16)) + 'px';
     };
-    const hide = () => { tip.hidden = true; tip.style.maxWidth = ''; };
-    moon.onmouseenter = show;
-    moon.onmouseleave = hide;
-    moon.onclick = () => (tip.hidden ? show() : hide()); // touch has no hover
-    moon.onfocus = show; // keyboard: tab to the link
+    const hide = () => { tip.hidden = true; tip.style.maxWidth = ''; tip.style.bottom = ''; tip.classList.remove('sheet'); };
+    // a real mouse hovers, touch taps. Touch also fakes a hover first, which used to open and instantly close it again
+    moon.onpointerenter = (e) => e.pointerType === 'mouse' && show();
+    moon.onpointerleave = (e) => e.pointerType === 'mouse' && hide();
+    moon.onclick = (e) => { if (e.pointerType !== 'mouse') (tip.hidden ? show() : hide()); };
+    moon.onfocus = () => moon.matches(':focus-visible') && show(); // keyboard: tab to the link
     moon.onblur = hide;
   }).catch((e) => console.warn('tonight', e));
   timers = [setInterval(() => loadBikes(c.name), 60000), setInterval(() => loadPlanes(c), 10000), setInterval(loadRadar, 300000)];
   raf = requestAnimationFrame(draw);
   info.querySelector('button').onclick = () => {
     tip.hidden = true;
+    tip.classList.remove('sheet');
+    tip.style.bottom = '';
+    closeLegend();
     tonightCard.hidden = true;
     clearTimeout(hang);
     loading.classList.add('done');

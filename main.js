@@ -544,6 +544,15 @@ setInterval(loadISS, 5000);
 let sky = null;
 import('./sky.js').then((s) => { sky = s.initSky(scene, camera, toVec3, sunDirection); }).catch((e) => console.warn('sky', e));
 
+// phones: the four toggles live behind a Menu button (on wide screens CSS shows them all in a row)
+const toolsEl = document.getElementById('tools');
+const menuBtn = document.getElementById('menu');
+menuBtn.onclick = () => {
+  const open = toolsEl.classList.toggle('open');
+  menuBtn.textContent = open ? 'Close' : 'Menu';
+  menuBtn.setAttribute('aria-expanded', open);
+};
+
 // satellites (see sats.js): off by default, and nothing is downloaded until the first time they're switched on
 let sats = null;
 const satsBtn = document.getElementById('sats');
