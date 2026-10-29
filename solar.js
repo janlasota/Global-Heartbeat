@@ -5,13 +5,13 @@ import * as THREE from 'three';
 import * as Astronomy from 'astronomy-engine';
 
 const BODIES = [
-  { name: 'Mercury', color: 0xb5a89a, r: 0.45, period: 88, year: '88 days', moons: 'none', fact: 'Sunrise to sunrise takes 176 Earth days, twice as long as its year.' },
-  { name: 'Venus', color: 0xe8c47a, r: 0.9, period: 225, year: '225 days', moons: 'none', fact: 'It spins backwards, and it is hotter than Mercury because of its thick clouds.' },
-  { name: 'Mars', color: 0xd9603b, r: 0.6, period: 687, year: '687 days', moons: '2', fact: 'Home to Olympus Mons, the tallest volcano known in the solar system.' },
-  { name: 'Jupiter', color: 0xd8b48c, r: 2.2, period: 4333, year: '11.9 years', moons: '90+ known', fact: 'The Great Red Spot is a storm wider than the Earth.' },
-  { name: 'Saturn', color: 0xe6d29a, r: 1.9, period: 10759, year: '29.4 years', moons: '140+ known', fact: 'It is less dense than water, so it would float in a big enough bathtub.', ring: true },
-  { name: 'Uranus', color: 0x8fe3e6, r: 1.4, period: 30687, year: '84 years', moons: '28', fact: 'Tipped on its side, so each pole gets 42 years of daylight in a row.' },
-  { name: 'Neptune', color: 0x4a6bff, r: 1.4, period: 60190, year: '165 years', moons: '16', fact: 'Its winds are the fastest in the solar system, faster than the speed of sound.' },
+  { name: 'Mercury', color: 0xb5a89a, r: 0.3, period: 88, year: '88 days', moons: 'none', fact: 'Sunrise to sunrise takes 176 Earth days, twice as long as its year.' },
+  { name: 'Venus', color: 0xe8c47a, r: 0.8, period: 225, year: '225 days', moons: 'none', fact: 'It spins backwards, and it is hotter than Mercury because of its thick clouds.' },
+  { name: 'Mars', color: 0xd9603b, r: 0.45, period: 687, year: '687 days', moons: '2', fact: 'Home to Olympus Mons, the tallest volcano known in the solar system.' },
+  { name: 'Jupiter', color: 0xd8b48c, r: 1.6, period: 4333, year: '11.9 years', moons: '90+ known', fact: 'The Great Red Spot is a storm wider than the Earth.' },
+  { name: 'Saturn', color: 0xe6d29a, r: 1.4, period: 10759, year: '29.4 years', moons: '140+ known', fact: 'It is less dense than water, so it would float in a big enough bathtub.', ring: true },
+  { name: 'Uranus', color: 0x8fe3e6, r: 1.0, period: 30687, year: '84 years', moons: '28', fact: 'Tipped on its side, so each pole gets 42 years of daylight in a row.' },
+  { name: 'Neptune', color: 0x4a6bff, r: 1.0, period: 60190, year: '165 years', moons: '16', fact: 'Its winds are the fastest in the solar system, faster than the speed of sound.' },
 ];
 const DAY = 86400000, K = 7; // displayed distance from the Sun = K * sqrt(AU)
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -48,7 +48,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
   const fades = []; // [material, base opacity]
   const fade = (m, o = 1) => { m.transparent = true; fades.push([m, o]); return m; };
 
-  const sun = new THREE.Mesh(new THREE.SphereGeometry(2.6, 32, 24), fade(new THREE.MeshBasicMaterial({ color: 0xffc94a })));
+  const sun = new THREE.Mesh(new THREE.SphereGeometry(2.2, 32, 24), fade(new THREE.MeshBasicMaterial({ color: 0xffc94a })));
   const gc = document.createElement('canvas');
   gc.width = gc.height = 128;
   const gg = gc.getContext('2d'), grad = gg.createRadialGradient(64, 64, 0, 64, 64, 64);
@@ -69,7 +69,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
 
   const targets = [
     { name: 'Earth', obj: earthAnchor, hit: 1, dist: 3.2, minD: 1.6, au: 1, year: '365.25 days', moons: '1', fact: 'The only place we know of with life, and where you are right now.' },
-    { name: 'Sun', obj: sun, hit: 2.6, dist: 22, minD: 5, fact: 'It holds 99.8% of all the mass in the solar system.' },
+    { name: 'Sun', obj: sun, hit: 2.2, dist: 18, minD: 4, fact: 'It holds 99.8% of all the mass in the solar system.' },
   ];
   const bodyPos = new THREE.Vector3(), t0 = getNow();
   for (const d of BODIES) {
@@ -171,7 +171,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
     open() { focus(targets[1], true); }, // the Solar System button: fly out to an overview centered on the Sun
     update(dt) {
       const d = camera.position.length();
-      f = smooth(9, 16, d);
+      f = smooth(18, 30, d);
       const far = f > 0.4;
       root.rotation.y = -((Astronomy.SiderealTime(getNow()) * 15 * Math.PI) / 180);
       content.visible = earthLabel.visible = f > 0.01;
