@@ -68,7 +68,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
   fade(earthLabel.material);
 
   const targets = [
-    { name: 'Earth', obj: earthAnchor, hit: 1, dist: 3.2, minD: 1.6, au: 1, year: '365.25 days', moons: '1', fact: 'The only place we know of with life, and where you are right now.' },
+    { name: 'Earth', obj: earthAnchor, hit: 1, dist: 8, minD: 1.6, au: 1, year: '365.25 days', moons: '1', fact: 'The only place we know of with life, and where you are right now.' },
     { name: 'Sun', obj: sun, hit: 2.2, dist: 20, minD: 4, fact: 'It holds 99.8% of all the mass in the solar system.' },
   ];
   const bodyPos = new THREE.Vector3(), t0 = getNow();
@@ -109,7 +109,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
     bar.append(b);
   }
 
-  let f = 0, lock = 0, offset = 0, playing = false, followed = null, fly = null, shown = null, lastPlace = -1e9, lastFar = false;
+  let f = 0, lock = 0, hold = false, offset = 0, playing = false, followed = null, fly = null, shown = null, lastPlace = -1e9, lastFar = false;
   const v3 = new THREE.Vector3(), now0 = () => new Date(getNow().getTime() + offset * DAY);
 
   function showInfo(t) {
@@ -121,6 +121,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
   }
   function focus(t, overview) {
     followed = t.name === 'Earth' ? null : t;
+    hold = t.name === 'Earth'; // stay in solar view with the Earth card, zoom in to land back on the globe
     controls.minDistance = t.minD;
     controls.autoRotate = false;
     let dir = camera.position.clone().sub(controls.target).normalize();
@@ -172,7 +173,8 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
     update(dt) {
       const d = camera.position.length();
       // while following a planet we're in solar mode no matter how close that planet is to the Earth
-      lock = followed ? Math.min(1, lock + dt / 0.8) : Math.max(0, lock - dt / 0.8);
+      if (hold && d < 4.5) hold = false;
+      lock = followed || hold ? Math.min(1, lock + dt / 0.8) : Math.max(0, lock - dt / 0.8);
       f = Math.max(smooth(26, 42, d), lock);
       const far = f > 0.4;
       root.rotation.y = -((Astronomy.SiderealTime(getNow()) * 15 * Math.PI) / 180);
@@ -183,7 +185,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
       else if (f <= 0.01 && camera.far > 1000) { camera.far = 200; camera.updateProjectionMatrix(); }
       ui.hidden = !far;
       document.body.classList.toggle('space', far);
-      if (far !== lastFar && !(fly && !far)) { lastFar = far; if (!far) { controls.minDistance = 1.6; followed = null; fly = null; info.hidden = true; shown = null; bar.querySelectorAll('button').forEach((b) => b.classList.remove('on')); } }
+      if (far !== lastFar && !(fly && !far)) { lastFar = far; if (!far) { hold = false; controls.minDistance = 1.6; followed = null; fly = null; info.hidden = true; shown = null; bar.querySelectorAll('button').forEach((b) => b.classList.remove('on')); } }
       if (playing) {
         offset = Math.min(3650, offset + dt * (calm ? 15 : 45)); // about a month and a half per second
         if (offset >= 3650) { playing = false; playBtn.textContent = 'play'; }
