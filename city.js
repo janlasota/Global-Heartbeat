@@ -243,9 +243,9 @@ export function openCity(c, onClose) {
         return;
       }
       tip.style.maxWidth = '300px';
-      const r = moon.getBoundingClientRect();
-      tip.style.left = Math.min(r.right + 12, innerWidth - tip.offsetWidth - 12) + 'px';
-      tip.style.top = Math.max(12, Math.min(r.top, innerHeight - tip.offsetHeight - 16)) + 'px';
+      const box = tonightCard.getBoundingClientRect(); // anchored to the card, not the link, so there is a clear gap
+      tip.style.left = Math.min(box.right + 16, innerWidth - tip.offsetWidth - 12) + 'px';
+      tip.style.top = Math.max(12, Math.min(box.bottom - tip.offsetHeight, innerHeight - tip.offsetHeight - 16)) + 'px'; // bottoms line up, grows upward
     };
     const hide = () => { tip.hidden = true; tip.style.maxWidth = ''; tip.style.bottom = ''; tip.classList.remove('sheet'); };
     // a real mouse hovers, touch taps. Touch also fakes a hover first, which used to open and instantly close it again
