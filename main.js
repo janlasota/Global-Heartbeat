@@ -419,8 +419,11 @@ canvas.addEventListener('pointerup', (e) => {
     if (ship?.pick(e.clientX, e.clientY)) ship.roll();
     else if (pickISS(e)) showISS(e);
     else if (pickQuake(e)) showQuake(pickQuake(e), e);
-    else if (skyHtml) showSky(skyHtml, e);
-    else tip.hidden = true;
+    else if (skyHtml) {
+      showSky(skyHtml, e);
+      const at = sky.where(e.clientX, e.clientY);
+      if (at && !calm) turn = { from: camera.position.clone(), to: at.normalize().negate().multiplyScalar(camera.position.length()), t: 0 };
+    } else tip.hidden = true;
   }
 });
 
@@ -616,8 +619,16 @@ document.getElementById('solar-btn').onclick = async () => {
 const clock = new THREE.Clock();
 let lastPanel = 0;
 let lastBpm = -Infinity;
+// clicking something in the sky swings the view round so it sits behind the Earth, centered
+let turn = null;
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.1);
+  if (turn) {
+    turn.t = Math.min(1, turn.t + dt / 1.2);
+    const e = turn.t * turn.t * (3 - 2 * turn.t), len = camera.position.length();
+    camera.position.copy(turn.from).normalize().lerp(turn.to.clone().normalize(), e).normalize().multiplyScalar(len);
+    if (turn.t >= 1) turn = null;
+  }
   const now = simNow();
 
   globeMat.uniforms.uSun.value.copy(sunDirection(now));
@@ -668,7 +679,8 @@ function frame() {
     lastPanel = performance.now();
   }
 
-  if (selected || inCity) idleSince = performance.now(); // never spin out from under an open menu
+  if (far > 0.4) controls.autoRotate = false; // no idle spin while exploring the planets
+  if (selected || inCity || far > 0.4) idleSince = performance.now(); // never spin out from under an open menu
   else if (!calm && !controls.autoRotate && performance.now() - idleSince > IDLE_MS) { controls.autoRotate = true; tip.hidden = true; }
   controls.update();
   renderer.render(scene, camera);

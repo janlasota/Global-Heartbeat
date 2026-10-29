@@ -258,7 +258,11 @@ export function initSky(scene, camera, toVec3, sunDirection) {
     },
     setLabels(on) { for (const l of labels) l.visible = on; },
     // returns tooltip html for the sky object under (x, y), or null
-    pick(x, y) {
+    pick(x, y) { return find(x, y)?.html() ?? null; },
+    // world position of the same object, so the view can turn to face it
+    where(x, y) { const o = find(x, y); return o ? o.obj.getWorldPosition(new THREE.Vector3()) : null; },
+  };
+  function find(x, y) {
       cam.copy(camera.position);
       let best = null, bd = Infinity;
       for (const o of pickable) {
@@ -272,7 +276,6 @@ export function initSky(scene, camera, toVec3, sunDirection) {
         const key = (o.prio ?? 0) * 1e9 + dist;
         if (dist <= o.radius ** 2 && key < bd) { bd = key; best = o; }
       }
-      return best ? best.html() : null;
-    },
-  };
+      return best;
+  }
 }
