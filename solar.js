@@ -97,7 +97,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
   const ui = document.createElement('div');
   ui.id = 'solar';
   ui.hidden = true;
-  ui.innerHTML = `<div class="s-info" hidden></div><div class="s-bar"></div>
+  ui.innerHTML = `<button class="s-home">&larr; Back to Earth</button><div class="s-info" hidden></div><div class="s-bar"></div>
     <div class="s-time"><button class="play">play</button><input type="range" min="-3650" max="3650" step="1" value="0" aria-label="Date offset in days"><span></span><button class="now">now</button></div>`;
   document.body.append(ui);
   const bar = ui.querySelector('.s-bar'), info = ui.querySelector('.s-info');
@@ -146,6 +146,13 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
     slider.value = offset;
     if (shown && !info.hidden) showInfo(shown);
   }
+  // all the way home: fly to the Earth and drop out of solar view when we arrive
+  ui.querySelector('.s-home').onclick = () => {
+    followed = null; hold = false; info.hidden = true; shown = null;
+    controls.minDistance = 1.6;
+    fly = { t: 0, from: camera.position.clone(), fromTarget: controls.target.clone(), dir: camera.position.clone().sub(controls.target).normalize(), dist: 3.2 };
+    bar.querySelectorAll('button').forEach((b) => b.classList.remove('on'));
+  };
   slider.oninput = () => { offset = +slider.value; setDate(); };
   playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? 'pause' : 'play'; };
   ui.querySelector('.now').onclick = () => { offset = 0; setDate(); };

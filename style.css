@@ -146,3 +146,5 @@ html, body { touch-action: pan-x pan-y; }
 #solar .s-time span { min-width: 90px; text-align: center; }
 body.space #key, body.space #panel { display: none !important; }
 @media (max-width: 900px) { #solar .s-info { bottom: 130px; max-width: calc(100vw - 32px); } } /* clear of the planet buttons and slider */
+#solar .s-home { position: absolute; left: 16px; top: calc(max(16px, env(safe-area-inset-top)) + 24px); }
+body.space #jump { display: none; } /* jumping to a city from out here would break the view, so Back to Earth takes its place */
