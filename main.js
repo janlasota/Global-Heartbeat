@@ -19,7 +19,8 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 1.6;
-controls.maxDistance = 12;
+controls.maxDistance = 160;
+controls.zoomSpeed = 1.6;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.4;
 // people who asked their OS for less motion get no idle spin and much calmer pulses
@@ -350,6 +351,7 @@ function showQuake(q, e) {
   tip.hidden = false;
 }
 canvas.addEventListener('pointermove', (e) => {
+  if (solar?.f > 0.4) { hoverQ = null; tip.hidden = true; canvas.style.cursor = solar.hit(e.clientX, e.clientY) ? 'pointer' : 'grab'; return; }
   if (downAt) { hoverQ = null; return void (tip.hidden = true); }
   const city = pickCity(e);
   const onShip = !city && ship?.pick(e.clientX, e.clientY);
@@ -406,6 +408,7 @@ canvas.addEventListener('pointerup', (e) => {
   const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
   downAt = null;
   if (moved > 6) return;
+  if (solar?.f > 0.4) { solar.click(e.clientX, e.clientY); return; }
   const hit = pickCity(e);
   if (hit) {
     selectCity(hit);
@@ -595,17 +598,18 @@ shipBtn.onclick = async () => {
   } catch (e) { console.warn('ship', e); }
 };
 
-// Solar System mode (see solar.js), loaded the first time it's opened
-let solar = null;
+// Solar System (see solar.js): zoom out past the sky, or press the button. Loaded the first time it's needed.
+let solar = null, solarLoading = false;
+async function loadSolar() {
+  if (solar || solarLoading) return;
+  solarLoading = true;
+  try { solar = (await import('./solar.js')).initSolar({ scene, camera, controls, getNow: simNow, calm }); } catch (e) { console.warn('solar', e); }
+}
 document.getElementById('solar-btn').onclick = async () => {
   if (inCity) return;
   unlock();
-  try {
-    if (!solar) { solar = (await import('./solar.js')).initSolar(simNow, calm); solar.onBack(() => { solar.exit(); controls.enabled = true; }); }
-    selected = null; panel.hidden = true;
-    controls.enabled = false;
-    solar.enter();
-  } catch (e) { console.warn('solar', e); controls.enabled = true; }
+  await loadSolar();
+  solar?.open();
 };
 
 // main loop
@@ -614,7 +618,6 @@ let lastPanel = 0;
 let lastBpm = -Infinity;
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.1);
-  if (solar?.active) return void requestAnimationFrame(frame); // Solar System mode draws itself, the globe waits
   const now = simNow();
 
   globeMat.uniforms.uSun.value.copy(sunDirection(now));
@@ -642,7 +645,11 @@ function frame() {
     c.dot.material.color.setHSL(0.5 - (c.bpm - 42) / 120 * 0.2, 1, 0.55);
   }
 
+  if (!solar && camera.position.length() > 8) loadSolar(); // zooming out far enough brings the planets in
+  solar?.update(dt);
+  const far = solar?.f ?? 0;
   sky?.update(now);
+  sky?.setFar(far, camera.position);
   const wantEngine = shipOn && !inCity; // hum only while the fighters are on screen
   if (wantEngine !== engineState) { engineState = wantEngine; engineOn(wantEngine); }
   sats?.update(now);

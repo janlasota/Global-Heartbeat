@@ -6,6 +6,7 @@ import * as Astronomy from 'astronomy-engine';
 
 const DATA = 'https://cdn.jsdelivr.net/gh/ofrohn/d3-celestial@v0.7.32/data/';
 const R_STARS = 50, R_PLANETS = 40, R_MOON = 18;
+const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const KM_PER_AU = 149597870.7;
 
 // name, nickname, RA [h m s], Dec [sign d m s], spin period (s), blurb. Positions/periods are from the well-known catalog values.
@@ -248,6 +249,12 @@ export function initSky(scene, camera, toVec3, sunDirection) {
         p.sprite.scale.setScalar(1.3 + 1.6 * amp * Math.exp(-((phase / 0.18) ** 2)));
         p.sprite.material.opacity = 0.55 + 0.45 * amp * Math.exp(-((phase / 0.18) ** 2));
       }
+    },
+    // zoomed out into the solar system: hide the sky's own Sun, Moon and planets (solar.js draws real ones) and let the stars follow the camera
+    setFar(f, camPos) {
+      const far = f > 0.4;
+      for (const o of [sun, moon, ...planets.map((p) => p.sprite)]) o.visible = !far;
+      group.position.copy(camPos).multiplyScalar(smoothstep(10, 18, camPos.length()));
     },
     setLabels(on) { for (const l of labels) l.visible = on; },
     // returns tooltip html for the sky object under (x, y), or null
