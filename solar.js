@@ -109,7 +109,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
     bar.append(b);
   }
 
-  let f = 0, offset = 0, playing = false, followed = null, fly = null, shown = null, lastPlace = -1e9, lastFar = false;
+  let f = 0, lock = 0, offset = 0, playing = false, followed = null, fly = null, shown = null, lastPlace = -1e9, lastFar = false;
   const v3 = new THREE.Vector3(), now0 = () => new Date(getNow().getTime() + offset * DAY);
 
   function showInfo(t) {
@@ -171,7 +171,9 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
     open() { focus(targets[1], true); }, // the Solar System button: fly out to an overview centered on the Sun
     update(dt) {
       const d = camera.position.length();
-      f = smooth(26, 42, d);
+      // while following a planet we're in solar mode no matter how close that planet is to the Earth
+      lock = followed ? Math.min(1, lock + dt / 0.8) : Math.max(0, lock - dt / 0.8);
+      f = Math.max(smooth(26, 42, d), lock);
       const far = f > 0.4;
       root.rotation.y = -((Astronomy.SiderealTime(getNow()) * 15 * Math.PI) / 180);
       content.visible = earthLabel.visible = f > 0.01;

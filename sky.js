@@ -254,7 +254,7 @@ export function initSky(scene, camera, toVec3, sunDirection) {
     setFar(f, camPos) {
       const far = f > 0.01; // the moment the real planets start fading in, the sky's stand-ins go
       for (const o of [sun, moon, ...planets.map((p) => p.sprite)]) o.visible = !far;
-      group.position.copy(camPos).multiplyScalar(smoothstep(20, 34, camPos.length()));
+      group.position.copy(camPos).multiplyScalar(Math.max(smoothstep(20, 34, camPos.length()), f));
     },
     setLabels(on) { for (const l of labels) l.visible = on; },
     // returns tooltip html for the sky object under (x, y), or null
