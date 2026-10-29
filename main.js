@@ -595,12 +595,26 @@ shipBtn.onclick = async () => {
   } catch (e) { console.warn('ship', e); }
 };
 
+// Solar System mode (see solar.js), loaded the first time it's opened
+let solar = null;
+document.getElementById('solar-btn').onclick = async () => {
+  if (inCity) return;
+  unlock();
+  try {
+    if (!solar) { solar = (await import('./solar.js')).initSolar(simNow, calm); solar.onBack(() => { solar.exit(); controls.enabled = true; }); }
+    selected = null; panel.hidden = true;
+    controls.enabled = false;
+    solar.enter();
+  } catch (e) { console.warn('solar', e); controls.enabled = true; }
+};
+
 // main loop
 const clock = new THREE.Clock();
 let lastPanel = 0;
 let lastBpm = -Infinity;
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.1);
+  if (solar?.active) return void requestAnimationFrame(frame); // Solar System mode draws itself, the globe waits
   const now = simNow();
 
   globeMat.uniforms.uSun.value.copy(sunDirection(now));
