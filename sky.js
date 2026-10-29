@@ -252,7 +252,7 @@ export function initSky(scene, camera, toVec3, sunDirection) {
     },
     // zoomed out into the solar system: hide the sky's own Sun, Moon and planets (solar.js draws real ones) and let the stars follow the camera
     setFar(f, camPos) {
-      const far = f > 0.4;
+      const far = f > 0.01; // the moment the real planets start fading in, the sky's stand-ins go
       for (const o of [sun, moon, ...planets.map((p) => p.sprite)]) o.visible = !far;
       group.position.copy(camPos).multiplyScalar(smoothstep(10, 18, camPos.length()));
     },
