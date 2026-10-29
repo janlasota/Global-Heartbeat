@@ -175,7 +175,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
       const far = f > 0.4;
       root.rotation.y = -((Astronomy.SiderealTime(getNow()) * 15 * Math.PI) / 180);
       content.visible = earthLabel.visible = f > 0.01;
-      light.intensity = f > 0.01 ? 3.2 * f : 0; // fades in with the planets, so they're never visible but unlit
+      light.intensity = f > 0.01 ? 3.2 : 0; // full strength as soon as the planets start to appear, so a half-faded planet is still lit
       for (const [m, o] of fades) m.opacity = o * f;
       if (f > 0.01 && camera.far < 1000) { camera.far = 3000; camera.updateProjectionMatrix(); }
       else if (f <= 0.01 && camera.far > 1000) { camera.far = 200; camera.updateProjectionMatrix(); }
