@@ -135,7 +135,7 @@ html, body { touch-action: pan-x pan-y; }
 #solar button { pointer-events: auto; background: rgba(4, 5, 10, 0.75); color: var(--text); border: 1px solid var(--neon); border-radius: 12px;
   padding: 8px 12px; font: inherit; cursor: pointer; }
 #solar button.on { background: var(--neon); color: var(--bg); }
-#solar .s-info { position: absolute; left: 16px; top: 76px; max-width: 280px; line-height: 1.5; padding: 10px 12px; border: 1px solid var(--neon);
+#solar .s-info { position: absolute; left: 16px; bottom: 36px; max-width: 280px; line-height: 1.5; padding: 10px 12px; border: 1px solid var(--neon);
   border-radius: 12px; background: rgba(4, 5, 10, 0.75); }
 #solar .s-info[hidden] { display: none; }
 #solar .s-info b { color: var(--neon); font-size: 13px; font-weight: normal; display: block; margin-bottom: 4px; }
@@ -145,3 +145,4 @@ html, body { touch-action: pan-x pan-y; }
 #solar .s-time input { flex: 1; max-width: 360px; accent-color: var(--neon); pointer-events: auto; }
 #solar .s-time span { min-width: 90px; text-align: center; }
 body.space #key, body.space #panel { display: none !important; }
+@media (max-width: 900px) { #solar .s-info { bottom: 130px; max-width: calc(100vw - 32px); } } /* clear of the planet buttons and slider */
