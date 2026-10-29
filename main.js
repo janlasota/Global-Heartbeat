@@ -351,7 +351,13 @@ function showQuake(q, e) {
   tip.hidden = false;
 }
 canvas.addEventListener('pointermove', (e) => {
-  if (solar?.f > 0.4) { hoverQ = null; tip.hidden = true; canvas.style.cursor = solar.hit(e.clientX, e.clientY) ? 'pointer' : 'grab'; return; }
+  if (solar?.f > 0.4) { // zoomed out: planets are clickable, the stars and nebulae still have their tooltips
+    hoverQ = null;
+    if (solar.hit(e.clientX, e.clientY)) { tip.hidden = true; canvas.style.cursor = 'pointer'; return; }
+    const html = sky?.pick(e.clientX, e.clientY);
+    canvas.style.cursor = html ? 'help' : 'grab';
+    return void (html ? showSky(html, e) : (tip.hidden = true));
+  }
   if (downAt) { hoverQ = null; return void (tip.hidden = true); }
   const city = pickCity(e);
   const onShip = !city && ship?.pick(e.clientX, e.clientY);
@@ -408,7 +414,12 @@ canvas.addEventListener('pointerup', (e) => {
   const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
   downAt = null;
   if (moved > 6) return;
-  if (solar?.f > 0.4) { solar.click(e.clientX, e.clientY); return; }
+  if (solar?.f > 0.4) {
+    if (solar.click(e.clientX, e.clientY)) return;
+    const html = sky?.pick(e.clientX, e.clientY);
+    if (html) showSky(html, e); else tip.hidden = true;
+    return;
+  }
   const hit = pickCity(e);
   if (hit) {
     selectCity(hit);
