@@ -13,12 +13,12 @@ const BODIES = [
   { name: 'Uranus', color: 0x8fe3e6, r: 1.0, period: 30687, year: '84 years', moons: '28', fact: 'Tipped on its side, so each pole gets 42 years of daylight in a row.' },
   { name: 'Neptune', color: 0x4a6bff, r: 1.0, period: 60190, year: '165 years', moons: '16', fact: 'Its winds are the fastest in the solar system, faster than the speed of sound.' },
 ];
-const DAY = 86400000, K = 7; // displayed distance from the Sun = K * sqrt(AU)
+const DAY = 86400000, K = 14; // displayed distance from the Sun = K * AU^0.6, which spreads the inner planets out so they don't touch
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 // heliocentric position (AU, J2000 equator) -> scene position in the same frame the sky uses (toVec3 of ra/dec), distance squashed
 function helio(name, date, out) {
-  const v = Astronomy.HelioVector(Astronomy.Body[name], date), au = Math.hypot(v.x, v.y, v.z), s = (K * Math.sqrt(au)) / au;
+  const v = Astronomy.HelioVector(Astronomy.Body[name], date), au = Math.hypot(v.x, v.y, v.z), s = (K * au ** 0.6) / au;
   return { pos: out.set(v.y * s, v.z * s, v.x * s), au };
 }
 
@@ -69,7 +69,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
 
   const targets = [
     { name: 'Earth', obj: earthAnchor, hit: 1, dist: 3.2, minD: 1.6, au: 1, year: '365.25 days', moons: '1', fact: 'The only place we know of with life, and where you are right now.' },
-    { name: 'Sun', obj: sun, hit: 2.2, dist: 18, minD: 4, fact: 'It holds 99.8% of all the mass in the solar system.' },
+    { name: 'Sun', obj: sun, hit: 2.2, dist: 20, minD: 4, fact: 'It holds 99.8% of all the mass in the solar system.' },
   ];
   const bodyPos = new THREE.Vector3(), t0 = getNow();
   for (const d of BODIES) {
@@ -128,7 +128,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
     let dist = t.dist;
     if (overview) { // look down on the orbits from above the ecliptic, with the Sun in the middle
       dir = new THREE.Vector3(-0.398 * 0.8, 0.917 * 0.8, 0.6).normalize().applyQuaternion(root.quaternion);
-      dist = 85;
+      dist = 190;
     }
     fly = { t: 0, from: camera.position.clone(), fromTarget: controls.target.clone(), dir, dist };
     bar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.textContent === t.name));
@@ -171,7 +171,7 @@ export function initSolar({ scene, camera, controls, getNow, calm }) {
     open() { focus(targets[1], true); }, // the Solar System button: fly out to an overview centered on the Sun
     update(dt) {
       const d = camera.position.length();
-      f = smooth(18, 30, d);
+      f = smooth(26, 42, d);
       const far = f > 0.4;
       root.rotation.y = -((Astronomy.SiderealTime(getNow()) * 15 * Math.PI) / 180);
       content.visible = earthLabel.visible = f > 0.01;
