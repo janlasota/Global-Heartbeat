@@ -1,5 +1,5 @@
 // The solar system, inside the same scene as the globe: zoom out past the sky and the planets fade in around the Earth.
-// Positions are real for the chosen date, but distances are squashed (square root of the real distance) and the planets
+// Positions are real for the chosen date, but distances are squashed (AU to the power 0.6) and the planets
 // are enlarged, or it would be mostly empty space. The Earth stays at the origin, so the globe IS the Earth.
 import * as THREE from 'three';
 import * as Astronomy from 'astronomy-engine';
