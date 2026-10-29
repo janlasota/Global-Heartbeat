@@ -110,6 +110,7 @@ button { font: inherit; font-size: 11px; color: var(--neon); background: none; b
   #legend { display: none; left: auto; right: 16px; top: 120px; }
   #legend.open { display: block; }
   #tonight { max-width: calc(100vw - 32px); }
+  #tonight .more { padding: 10px 6px; margin: -10px -6px; touch-action: manipulation; } /* bigger tap target */
   #tip.sheet { left: 16px !important; right: 16px; top: auto !important; max-width: none !important; max-height: 50vh; overflow: auto; }
 }
 

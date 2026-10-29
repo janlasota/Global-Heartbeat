@@ -251,7 +251,12 @@ export function openCity(c, onClose) {
     // a real mouse hovers, touch taps. Touch also fakes a hover first, which used to open and instantly close it again
     moon.onpointerenter = (e) => e.pointerType === 'mouse' && show();
     moon.onpointerleave = (e) => e.pointerType === 'mouse' && hide();
-    moon.onclick = (e) => { if (e.pointerType !== 'mouse') (tip.hidden ? show() : hide()); };
+    // touch: act on pointerup (fires even when the browser drops the click), and a tap anywhere else closes it
+    let tapped = 0;
+    moon.onpointerup = (e) => { if (e.pointerType !== 'mouse') { tapped = Date.now(); tip.hidden ? show() : hide(); } };
+    moon.onclick = (e) => { if (Date.now() - tapped > 500 && !(e.pointerType === 'mouse')) (tip.hidden ? show() : hide()); };
+    tonightCard.onpointerdown = (e) => e.stopPropagation();
+    document.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse' && !tonightCard.contains(e.target)) hide(); }, { capture: true });
     moon.onfocus = () => moon.matches(':focus-visible') && show(); // keyboard: tab to the link
     moon.onblur = hide;
   }).catch((e) => console.warn('tonight', e));
