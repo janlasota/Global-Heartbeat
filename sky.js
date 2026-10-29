@@ -225,6 +225,7 @@ export function initSky(scene, camera, toVec3, sunDirection) {
     return { e, km: e.dist * KM_PER_AU };
   };
 
+  const moonDir = new THREE.Vector3(0, 0, 1), up = new THREE.Vector3(0, 1, 0);
   const tmp = new THREE.Vector3(), cam = new THREE.Vector3();
   return {
     update(date) {
@@ -233,6 +234,7 @@ export function initSky(scene, camera, toVec3, sunDirection) {
       if (Date.now() - last > 60000) { // Moon/planets move slowly, once a minute is plenty
         last = Date.now();
         const m = place(moon, 'Moon', date, R_MOON);
+        moonDir.copy(moon.position).normalize();
         const ang = Astronomy.MoonPhase(date), il = Astronomy.Illumination('Moon', date).phase_fraction;
         moonInfo = `<b>Moon</b><br>${PHASES[Math.round(ang / 45) % 8]}, ${Math.round(il * 100)}% lit<br>${Math.round(m.km).toLocaleString()} km away<br>in ${Astronomy.Constellation(m.e.ra, m.e.dec).name}`;
         const sn = place(sun, 'Sun', date, 44);
@@ -253,8 +255,11 @@ export function initSky(scene, camera, toVec3, sunDirection) {
     // zoomed out into the solar system: hide the sky's own Sun, Moon and planets (solar.js draws real ones) and let the stars follow the camera
     setFar(f, camPos) {
       const far = f > 0.01; // the moment the real planets start fading in, the sky's stand-ins go
-      for (const o of [sun, moon, ...planets.map((p) => p.sprite)]) o.visible = !far;
+      for (const o of [sun, ...planets.map((p) => p.sprite)]) o.visible = !far;
       group.position.copy(camPos).multiplyScalar(Math.max(smoothstep(20, 34, camPos.length()), f));
+      // the Moon stays, but zoomed out it shrinks and hugs the Earth (and ignores the stars following the camera)
+      moon.scale.setScalar(1 - 0.6 * f);
+      moon.position.copy(moonDir).multiplyScalar(R_MOON + (2.8 - R_MOON) * f).sub(group.position.clone().applyAxisAngle(up, -group.rotation.y));
     },
     setLabels(on) { for (const l of labels) l.visible = on; },
     // returns tooltip html for the sky object under (x, y), or null
